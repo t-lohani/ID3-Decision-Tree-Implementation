@@ -91,10 +91,9 @@ class TreeNode():
     def __init__(self, data='T', children = [-1]*5):
         self.nodes = list(children)
         self.data = data
-        self.value = None
         #print self.children
 
-    def buildTree(self, trainfeat, trainlab, features_used, pval, depth):
+    def buildTree(self, trainfeat, trainlab, features_used, pval):
         #print "Hitting build tree"
         num_zero = trainlab.count(0)
         num_one = trainlab.count(1)
@@ -132,9 +131,11 @@ class TreeNode():
                     new_features_used[best_index] = True
                     #print "Depth, K : " + str(depth) + ", " + str(k)
                     new_child = TreeNode()
-                    new_child.value = k
-                    new_child.buildTree(value[0],value[1], new_features_used, pval, depth+1)
+                    new_child.buildTree(value[0],value[1], new_features_used, pval)
                     self.nodes[k-1] = new_child
+                for i in range(5):
+                    if (self.nodes[i] == -1):
+                        self.nodes[i] = TreeNode()
             else:
                 self.data = 'T' if num_one > num_zero else 'F'
 
@@ -163,18 +164,28 @@ class TreeNode():
         obj = open(filename, 'w')
         pkl.dump(self, obj)
 
-    def predict(self, input):
-        current = self
-        #print current.data
-        current_level = 0
-        while current.data !='T' and current.data !='F':
-            split_index = current.data
-            value = input[split_index]
+def predict(root, input):
+
+    current = root
+    while current:
+        if current.data == 'T': return '1'
+        if current.data == 'F': return '0'
+        index = int(root.data)-1
+        current = current.nodes[input[index]-1]
+
+    #return evaluate_datapoint(root.nodes[datapoint[int(root.data) - 1] - 1], datapoint)
+    #    current = root
+    #    #print current.data
+
+    #    while current.data !='T' and current.data !='F':
+
+    #        split_index = current.data
+    #        value = input[split_index]
             #print value
             # print " trying to find child at level " + str(current_level)
-            current_level +=1
-            current = get_child(current, value)
-        return '1' if current.data == 'T' else '0'
+    #        current = current.nodes[value-1]
+            # if current == -1:return '0'
+    #    return '1' if current.data == 'T' else '0'
 
 from Queue import Queue
 def treeIterator(node):
@@ -266,7 +277,7 @@ if __name__ == "__main__":
     print("Training...")
     root = TreeNode()
     #print id(root)
-    root.buildTree(Xtrain, Ytrain, features_used, pval, 0)
+    root.buildTree(Xtrain, Ytrain, features_used, pval)
     # treeIterator(root)
     #print id(root)
     #print root.__dict__
@@ -274,14 +285,10 @@ if __name__ == "__main__":
     print("Testing...")
     Ypredict = []
 
-    #root.predict(Xtest[5607])
+    #root.predict(Xtest[2811])
     # generate random labels
     for i in range(0, len(Xtest)):
-        try:    Ypredict.append(root.predict(Xtest[i]))
-        except AttributeError :
-           print " failed to predict at :" + str(i)
-           Ypredict.append(-1)
-           continue
+         Ypredict.append(predict(root,Xtest[i]))
 
     # print Ypredict
     with open(Ytest_predict_name, "wb") as f:
