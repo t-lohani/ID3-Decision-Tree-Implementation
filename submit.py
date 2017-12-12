@@ -14,9 +14,9 @@ def get_column_data_map(data, column):
 
 def get_child(node, value):
     # print "looking for value : " + str(value)
-    for child in node.children:
+    for child in node.nodes:
         #print child.__dict__
-        if child!=-1 and child.value == value:
+        if child!=-1 and child.value == value or child.data =='T' or child.data =='F':
             # print  " child value is " + str(child.value)
             # print " get_child found value"
             return child
@@ -88,8 +88,8 @@ TreeNode can be:
 
 # DO NOT CHANGE THIS CLASS
 class TreeNode():
-    def __init__(self, data='T', children=[-1] * 5):
-        self.children = list(children)
+    def __init__(self, data='T', children = [-1]*5):
+        self.nodes = list(children)
         self.data = data
         self.value = None
         #print self.children
@@ -125,7 +125,6 @@ class TreeNode():
             fp.write(dbg + "\n")
             #print "Chi Value " + str(chi_value)
             if chi_value < pval:
-                child_count = 0
                 for k in split_map.keys():
                     #print "count, k is "+ str(count) +","+ str(k)
                     value = split_map[k]
@@ -135,15 +134,15 @@ class TreeNode():
                     new_child = TreeNode()
                     new_child.value = k
                     new_child.buildTree(value[0],value[1], new_features_used, pval, depth+1)
-                    self.children[child_count] = new_child
-                    child_count += 1
+                    self.nodes[k-1] = new_child
             else:
                 self.data = 'T' if num_one > num_zero else 'F'
+
 
     def pickBest(self, trainfeat, trainlab, features_used):
         label_entropy = entropy(trainlab)
         #print "Label Entropy " + str(label_entropy)
-        max_gain = float("-inf")
+        max_gain = -1
         best_index = None
 
         for i in range(len(trainfeat[0])):
@@ -175,7 +174,7 @@ class TreeNode():
             # print " trying to find child at level " + str(current_level)
             current_level +=1
             current = get_child(current, value)
-        return current.data
+        return '1' if current.data == 'T' else '0'
 
 from Queue import Queue
 def treeIterator(node):
@@ -187,7 +186,7 @@ def treeIterator(node):
             temp, level = q.get()
             # print "level : value" + str(level) + " : " + str(temp.value)
             if temp.data !='T' and temp.data !='F':
-                for t in temp.children:
+                for t in temp.nodes:
                     if t!= -1 :
                         q.put((t, level +1))
         # print ("\n")
@@ -275,7 +274,7 @@ if __name__ == "__main__":
     print("Testing...")
     Ypredict = []
 
-    # root.predict(Xtest[13])
+    #root.predict(Xtest[5607])
     # generate random labels
     for i in range(0, len(Xtest)):
         try:    Ypredict.append(root.predict(Xtest[i]))
@@ -284,8 +283,6 @@ if __name__ == "__main__":
            Ypredict.append(-1)
            continue
 
-    print Ypredict.count('T')
-    print Ypredict.count('F')
     # print Ypredict
     with open(Ytest_predict_name, "wb") as f:
         writer = csv.writer(f)
