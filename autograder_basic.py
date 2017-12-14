@@ -38,7 +38,6 @@ class TreeNode():
         pkl.dump(self,obj)
         
 def evaluate_datapoint(root,datapoint):
-    if type(root) is int:print root
     if root.data == 'T': return 1
     if root.data =='F': return 0
     return evaluate_datapoint(root.nodes[datapoint[int(root.data)-1]-1], datapoint)
